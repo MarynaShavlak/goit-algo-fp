@@ -1,6 +1,6 @@
 """Пакет візуалізації для goit-algo-fp.
 
-Тут зібрано весь код малювання (turtle / matplotlib / networkx), щоб `main.py`
+Тут зібрано весь код візуалізації (turtle / matplotlib / networkx), щоб `main.py`
 кожної задачі лишався чистим — лише алгоритм і демонстрація. Модулі:
 
   * pythagoras     — рендер дерева Піфагора (turtle + PNG)        → task_2
