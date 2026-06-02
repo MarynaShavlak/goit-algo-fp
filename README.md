@@ -85,17 +85,12 @@ pytest
 
 ### Відтворення картинок
 
-Усі PNG у репозиторії генеруються самим кодом — прапорцем `--save`, який рендерить
-у файл без графічного середовища (matplotlib backend `Agg`), а не показує вікно:
+PNG у репозиторії генеруються самим кодом — прапорцем `--save`:
 
 ```bash
-python task_2/main.py --save     # tree.png (matplotlib-аналог turtle-дерева)
+python task_2/main.py --save     # tree.png
 python task_3/main.py --save     # dijkstra.png
 python task_4/main.py --save     # min_heap.png, max_heap.png
 python task_5/main.py --save     # dfs.png, bfs.png
 python task_7/main.py --save     # dice.png
 ```
-
-Без `--save` ці задачі працюють як і раніше (інтерактивне вікно). У `task_2` без
-`--save` дерево показується у turtle (`viz.render_turtle`), а `--save` рендерить
-ті самі відрізки через matplotlib (`viz.save_png`).
