@@ -3,13 +3,17 @@ goit-algo-fp / Завдання 7 — Метод Монте-Карло: суми
 
 Імітуємо велику кількість кидків двох кубиків, рахуємо ймовірність кожної суми
 (2..12) і порівнюємо результат з ТОЧНИМИ (аналітичними) ймовірностями.
+Стовпчиковий графік — у пакеті `viz` (`viz/dice_chart.py`).
 """
 
+import argparse
 import random
-from typing import Dict
+from pathlib import Path
+
+from viz.dice_chart import draw_chart
 
 
-def monte_carlo_dice(n_rolls: int) -> Dict[int, float]:
+def monte_carlo_dice(n_rolls: int) -> dict[int, float]:
     """Імітує `n_rolls` кидків двох кубиків; повертає ймовірності сум (у %)."""
     if n_rolls <= 0:
         raise ValueError("кількість кидків має бути додатною")
@@ -20,21 +24,26 @@ def monte_carlo_dice(n_rolls: int) -> Dict[int, float]:
     return {s: counts[s] / n_rolls * 100 for s in counts}
 
 
-def analytical_probabilities() -> Dict[int, float]:
-    """Точні ймовірності сум (у %).
-
-    Кількість комбінацій для суми s з двох кубиків: ways(s) = 6 - |s - 7|
-    (від 1/36 для 2 і 12 до 6/36 для 7), усього 36 рівноймовірних результатів.
-    """
-    return {s: (6 - abs(s - 7)) / 36 * 100 for s in range(2, 13)}
-
-
 def ways(s: int) -> int:
     """Кількість комбінацій двох кубиків, що дають суму s."""
     return 6 - abs(s - 7)
 
 
-def print_comparison(mc: Dict[int, float], exact: Dict[int, float]) -> None:
+def analytical_probabilities() -> dict[int, float]:
+    """Точні ймовірності сум (у %).
+
+    Кількість комбінацій для суми s з двох кубиків: ways(s) = 6 - |s - 7|
+    (від 1/36 для 2 і 12 до 6/36 для 7), усього 36 рівноймовірних результатів.
+    """
+    return {s: ways(s) / 36 * 100 for s in range(2, 13)}
+
+
+def max_deviation(mc: dict[int, float], exact: dict[int, float]) -> float:
+    """Максимальне абсолютне відхилення Монте-Карло від аналітики (у в.п.)."""
+    return max(abs(mc[s] - exact[s]) for s in range(2, 13))
+
+
+def print_comparison(mc: dict[int, float], exact: dict[int, float]) -> None:
     """Друкує таблицю: сума | частка | аналітично | Монте-Карло | |Δ|."""
     print(f"{'Сума':>5} | {'Частка':>7} | {'Аналітично':>11} | "
           f"{'Монте-Карло':>12} | {'|Δ|, в.п.':>9}")
@@ -46,35 +55,14 @@ def print_comparison(mc: Dict[int, float], exact: Dict[int, float]) -> None:
               f"{mc[s]:>11.2f}% | {diff:>9.2f}")
 
 
-def draw_chart(mc: Dict[int, float], exact: Dict[int, float],
-               n_rolls: int, save_path: str = None) -> None:
-    """Стовпчиковий графік: Монте-Карло поряд з аналітикою (потрібен matplotlib)."""
-    import matplotlib.pyplot as plt
-
-    sums = list(range(2, 13))
-    x = list(range(len(sums)))
-    width = 0.4
-
-    plt.figure(figsize=(10, 6))
-    plt.bar([i - width / 2 for i in x], [mc[s] for s in sums], width,
-            label="Монте-Карло", color="#1296F0")
-    plt.bar([i + width / 2 for i in x], [exact[s] for s in sums], width,
-            label="Аналітично", color="#E8590C")
-    plt.xticks(x, sums)
-    plt.xlabel("Сума на двох кубиках")
-    plt.ylabel("Імовірність, %")
-    plt.title(f"Метод Монте-Карло vs аналітика ({n_rolls:,} кидків)".replace(",", " "))
-    plt.legend()
-    plt.grid(axis="y", ls="--", alpha=0.4)
-    plt.tight_layout()
-    if save_path:
-        plt.savefig(save_path, dpi=130)
-        plt.close()
-    else:
-        plt.show()
-
-
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Монте-Карло: суми двох кубиків.")
+    parser.add_argument(
+        "--save", action="store_true",
+        help="зберегти dice.png поруч зі скриптом замість показу вікна",
+    )
+    args = parser.parse_args()
+
     random.seed(42)  # для відтворюваності результату
     exact = analytical_probabilities()
 
@@ -82,7 +70,7 @@ if __name__ == "__main__":
     print("Збіжність методу Монте-Карло (макс. відхилення від аналітики):")
     for n in (1_000, 10_000, 100_000):
         mc_n = monte_carlo_dice(n)
-        max_err = max(abs(mc_n[s] - exact[s]) for s in range(2, 13))
+        max_err = max_deviation(mc_n, exact)
         print(f"  {n:>7} кидків -> {max_err:.3f} в.п.")
 
     # Основна симуляція + порівняльна таблиця.
@@ -91,11 +79,16 @@ if __name__ == "__main__":
     print(f"\nПорівняльна таблиця ({N:,} кидків):\n".replace(",", " "))
     print_comparison(mc, exact)
 
-    max_err = max(abs(mc[s] - exact[s]) for s in range(2, 13))
+    max_err = max_deviation(mc, exact)
     print(f"\nМаксимальне відхилення від аналітики: {max_err:.2f} в.п.")
 
     # Графік (якщо встановлено matplotlib).
     try:
-        draw_chart(mc, exact, N)
+        if args.save:
+            out = Path(__file__).parent / "dice.png"
+            draw_chart(mc, exact, N, save_path=str(out))
+            print(f"Графік збережено: {out}")
+        else:
+            draw_chart(mc, exact, N)
     except ImportError:
         print("(matplotlib не встановлено — графік пропущено.)")
