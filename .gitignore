@@ -1,5 +1,12 @@
 __pycache__/
 *.py[cod]
+
+# артефакти пакування / editable-встановлення (pip install -e .)
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+
 .venv/
 venv/
 .idea/

@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "goit-algo-fp"
+version = "0.1.0"
+description = "Фінальний проєкт GoIT з алгоритмів і структур даних: однозв'язний список, рекурсивний фрактал, Дейкстра, бінарна купа, обходи дерева, жадібний/ДП та метод Монте-Карло."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Maryna Shavlak", email = "shavlakmaryna@gmail.com" }]
+keywords = [
+    "algorithms",
+    "data-structures",
+    "linked-list",
+    "recursion",
+    "dijkstra",
+    "binary-heap",
+    "tree-traversal",
+    "greedy",
+    "dynamic-programming",
+    "monte-carlo",
+]
+
+# Залежності лише для візуалізації (task_3-5, task_7); ядро решти задач — стандартна
+# бібліотека. Узгоджено з requirements.txt.
+dependencies = [
+    "networkx>=3.0",
+    "matplotlib>=3.5",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+# Пакуємо лише `viz` (спільний код малювання); теки task_N — це скрипти-демо, а
+# не імпортовані пакети. Editable-встановлення (`pip install -e .`) робить
+# `import viz` доступним звідусіль, тож main.py більше не правлять sys.path.
+[tool.setuptools]
+packages = ["viz"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
