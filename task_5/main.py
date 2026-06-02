@@ -2,15 +2,20 @@
 goit-algo-fp / Завдання 5 — Візуалізація обходів бінарного дерева.
 
 Обхід у глибину (DFS) та в ширину (BFS) виконуються ІТЕРАТИВНО — за допомогою
-стека та черги (без рекурсії). Кожен вузол при відвідуванні отримує унікальний
-колір; кольори йдуть градієнтом від ТЕМНИХ (відвідані раніше) до СВІТЛИХ
-(відвідані пізніше).
+стека та черги (без рекурсії). Спільний кістяк обходу — у `_traverse`; `dfs` і
+`bfs` лише задають, чи фронтир працює як стек (LIFO), чи як черга (FIFO). Кожен
+вузол при відвідуванні отримує унікальний колір; кольори йдуть градієнтом від
+ТЕМНИХ (відвідані раніше) до СВІТЛИХ (відвідані пізніше). Вузол (`Node`) і
+малювання дерева (`draw_tree`) — у пакеті `viz` (`viz/binary_tree.py`), спільні
+із Завданням 4.
 """
 
+import argparse
 from collections import deque
-from typing import List
+from pathlib import Path
 
-from task_4 import Node, draw_tree
+from viz.binary_tree import Node, draw_tree
+from viz.colors import lerp_color
 
 
 def generate_hex_color(step: int, total: int) -> str:
@@ -25,63 +30,52 @@ def generate_hex_color(step: int, total: int) -> str:
     t = 0.0 if total <= 1 else step / (total - 1)   # 0 -> темний, 1 -> світлий
     dark = (8, 48, 107)      # #08306B — темно-синій
     light = (222, 235, 247)  # #DEEBF7 — світло-блакитний
-    r = round(dark[0] + (light[0] - dark[0]) * t)
-    g = round(dark[1] + (light[1] - dark[1]) * t)
-    b = round(dark[2] + (light[2] - dark[2]) * t)
+    r, g, b = (round(c) for c in lerp_color(dark, light, t))
     return "#{:02X}{:02X}{:02X}".format(r, g, b)
 
 
-def _color_in_order(order: List[Node]) -> None:
+def _color_in_order(order: list[Node]) -> None:
     """Розфарбовує вузли у порядку їх відвідування."""
     total = len(order)
     for i, node in enumerate(order):
         node.color = generate_hex_color(i, total)
 
 
-def dfs(root: Node) -> List[Node]:
-    """Обхід у глибину (pre-order) за допомогою СТЕКА, без рекурсії.
+def _traverse(root: Node | None, use_stack: bool) -> list[Node]:
+    """Ітеративний обхід дерева зі спільним кістяком для DFS і BFS.
 
-    У дереві немає циклів, тож множина `visited` не потрібна. Праву дитину
-    кладемо у стек ПЕРШОЮ, щоб ліва оброблялася раніше (порядок корінь→ліво→право).
-    Повертає список вузлів у порядку відвідування.
+    use_stack=True  -> DFS: фронтир працює як стек (LIFO), беремо з кінця;
+    use_stack=False -> BFS: фронтир працює як черга (FIFO), беремо з початку.
+    У дереві немає циклів, тож множина `visited` не потрібна. Повертає список
+    вузлів у порядку відвідування й розфарбовує їх градієнтом за цим порядком.
     """
     if root is None:
         return []
 
-    order: List[Node] = []
-    stack = [root]
-    while stack:
-        node = stack.pop()
+    order: list[Node] = []
+    frontier = deque([root])
+    while frontier:
+        node = frontier.pop() if use_stack else frontier.popleft()
         order.append(node)
-        if node.right is not None:
-            stack.append(node.right)
-        if node.left is not None:
-            stack.append(node.left)
+        # Для стека (DFS) кладемо праву дитину ПЕРШОЮ, щоб ліва оброблялась
+        # раніше (корінь→ліво→право); для черги (BFS) — порядок зліва направо.
+        children = (node.right, node.left) if use_stack else (node.left, node.right)
+        for child in children:
+            if child is not None:
+                frontier.append(child)
 
     _color_in_order(order)
     return order
 
 
-def bfs(root: Node) -> List[Node]:
-    """Обхід у ширину (level-order) за допомогою ЧЕРГИ, без рекурсії.
+def dfs(root: Node | None) -> list[Node]:
+    """Обхід у глибину (pre-order) ІТЕРАТИВНО — через стек (LIFO), без рекурсії."""
+    return _traverse(root, use_stack=True)
 
-    Повертає список вузлів у порядку відвідування.
-    """
-    if root is None:
-        return []
 
-    order: List[Node] = []
-    queue = deque([root])
-    while queue:
-        node = queue.popleft()
-        order.append(node)
-        if node.left is not None:
-            queue.append(node.left)
-        if node.right is not None:
-            queue.append(node.right)
-
-    _color_in_order(order)
-    return order
+def bfs(root: Node | None) -> list[Node]:
+    """Обхід у ширину (level-order) ІТЕРАТИВНО — через чергу (FIFO), без рекурсії."""
+    return _traverse(root, use_stack=False)
 
 
 def build_sample_tree() -> Node:
@@ -99,14 +93,28 @@ def build_sample_tree() -> Node:
 
 
 if __name__ == "__main__":
-    # --- DFS ---
+    parser = argparse.ArgumentParser(description="Візуалізація обходів дерева (DFS/BFS).")
+    parser.add_argument(
+        "--save", action="store_true",
+        help="зберегти dfs.png і bfs.png поруч зі скриптом замість показу вікон",
+    )
+    args = parser.parse_args()
+
+    here = Path(__file__).parent
+
+    # DFS
     tree = build_sample_tree()
     order = dfs(tree)
     print("DFS (стек): ", [n.val for n in order])
-    draw_tree(tree, title="DFS — обхід у глибину (стек)")
+    draw_tree(tree, title="DFS — обхід у глибину (стек)",
+              save_path=str(here / "dfs.png") if args.save else None)
 
-    # --- BFS --- (будуємо дерево заново, щоб кольори не змішувалися)
+    # BFS (будуємо дерево заново, щоб кольори не змішувалися)
     tree = build_sample_tree()
     order = bfs(tree)
     print("BFS (черга):", [n.val for n in order])
-    draw_tree(tree, title="BFS — обхід у ширину (черга)")
+    draw_tree(tree, title="BFS — обхід у ширину (черга)",
+              save_path=str(here / "bfs.png") if args.save else None)
+
+    if args.save:
+        print(f"Збережено: {here / 'dfs.png'}, {here / 'bfs.png'}")
