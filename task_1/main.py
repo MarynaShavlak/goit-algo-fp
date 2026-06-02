@@ -2,25 +2,23 @@
 goit-algo-fp / Завдання 1 — Однозв'язний список: реверс, сортування, злиття.
 
 Реалізовано:
-  * reverse         — реверсування списку зміною посилань між вузлами (O(n), на місці);
-  * insertion_sort  — сортування вставками перез'єднанням вузлів (O(n²), O(1) пам'яті);
-  * merge_sorted_ll — злиття двох відсортованих списків в один відсортований (O(n + m)).
+  * reverse         — реверсування списку зміною посилань між вузлами;
+  * insertion_sort  — сортування вставками перез'єднанням вузлів;
+  * merge_sorted_ll — злиття двох відсортованих списків в один відсортований.
 """
-
-from typing import List, Optional
 
 
 class Node:
     def __init__(self, data=None):
         self.data = data
-        self.next: Optional["Node"] = None
+        self.next: Node | None = None
 
 
 class LinkedList:
     def __init__(self):
-        self.head: Optional[Node] = None
+        self.head: Node | None = None
 
-    # --- базові операції (з конспекту) ---
+    # базові операції списку
 
     def insert_at_beginning(self, data) -> None:
         new_node = Node(data)
@@ -37,10 +35,9 @@ class LinkedList:
             cur = cur.next
         cur.next = new_node
 
-    def insert_after(self, prev_node: Optional[Node], data) -> None:
+    def insert_after(self, prev_node: Node | None, data) -> None:
         if prev_node is None:
-            print("Попереднього вузла не існує.")
-            return
+            raise ValueError("попереднього вузла не існує (prev_node is None)")
         new_node = Node(data)
         new_node.next = prev_node.next
         prev_node.next = new_node
@@ -58,7 +55,7 @@ class LinkedList:
             return
         prev.next = cur.next
 
-    def search_element(self, data) -> Optional[Node]:
+    def search_element(self, data) -> Node | None:
         cur = self.head
         while cur:
             if cur.data == data:
@@ -66,7 +63,7 @@ class LinkedList:
             cur = cur.next
         return None
 
-    def to_list(self) -> List:
+    def to_list(self) -> list:
         result, cur = [], self.head
         while cur:
             result.append(cur.data)
@@ -76,10 +73,10 @@ class LinkedList:
     def print_list(self) -> None:
         print(" -> ".join(map(str, self.to_list())) or "(порожній)")
 
-    # --- Завдання 1 ---
+    # операції Завдання 1
 
     def reverse(self) -> None:
-        """Реверсування списку зміною посилань між вузлами. O(n) час, O(1) пам'ять.
+        """Реверсування списку зміною посилань між вузлами.
 
         Йдемо списком і для кожного вузла розвертаємо його посилання `next` на
         попередній. Жодних нових вузлів і жодного видалення за значенням.
@@ -94,13 +91,13 @@ class LinkedList:
         self.head = prev               # новим head стає колишній хвіст
 
     def insertion_sort(self) -> None:
-        """Сортування вставками перез'єднанням вузлів. O(n²) час, O(1) пам'ять.
+        """Сортування вставками перез'єднанням вузлів.
 
         Будуємо новий відсортований ланцюг `sorted_head`, вставляючи кожен
         ІСНУЮЧИЙ вузол на потрібне місце. Оскільки оперуємо самими вузлами, а не
         їх значеннями, сортування коректне й за наявності однакових значень.
         """
-        sorted_head: Optional[Node] = None
+        sorted_head: Node | None = None
         current = self.head
         while current:
             next_node = current.next
@@ -120,14 +117,14 @@ class LinkedList:
 
 
 def merge_sorted_ll(l1: LinkedList, l2: LinkedList) -> LinkedList:
-    """Зливає два ВІДСОРТОВАНІ списки в один відсортований. O(n + m).
+    """Зливає два ВІДСОРТОВАНІ списки в один відсортований.
 
-    Тримаємо вказівник на хвіст `tail`, тож вставка коштує O(1) (на відміну від
-    `insert_at_end`, що щоразу проходить увесь список — це давало б O(n²)).
-    Вихідні списки не змінюються: у новий список копіюються значення.
+    Тримаємо вказівник на хвіст `tail`, щоб вставка була миттєва, інакше довелося
+    б щоразу проходити весь зібраний список. Вихідні списки не змінюються: у новий
+    список копіюються значення.
     """
     merged = LinkedList()
-    tail: Optional[Node] = None
+    tail: Node | None = None
 
     def append(value) -> None:
         nonlocal tail
