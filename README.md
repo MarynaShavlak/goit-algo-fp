@@ -8,35 +8,43 @@
 ```
 goit-algo-fp/
 ├── README.md          # цей файл (індекс задач)
+├── viz/               # код візуалізації, щоб main.py лишалися чистими
+│   ├── colors.py          # lerp_color — спільний градієнт    (task_2, task_5)
+│   ├── pythagoras.py      # render_turtle + save_png        (task_2)
+│   ├── dijkstra_graph.py  # draw_graph + розкладка міст      (task_3)
+│   ├── binary_tree.py     # Node + draw_tree                 (task_4, task_5)
+│   └── dice_chart.py      # draw_chart                       (task_7)
+├── tests/             # pytest-набір для алгоритмічного ядра
 ├── task_1/            # Структури даних, сортування (однозв'язний список)
 │   ├── main.py        # reverse + insertion_sort + merge_sorted_ll
 │   └── README.md
 ├── task_2/            # Рекурсія: фрактал «дерево Піфагора»
-│   ├── main.py        # pythagoras_tree (turtle) + ввід рівня рекурсії
-│   ├── tree.png       # прев'ю результату
+│   ├── main.py        # pythagoras_segments (рекурсія) + демо
+│   ├── tree.png       # прев'ю результату (генерується `--save`)
 │   └── README.md
 ├── task_3/            # Дерева, алгоритм Дейкстри
-│   ├── main.py        # dijkstra (heapq) + reconstruct_path + візуалізація
+│   ├── main.py        # dijkstra (heapq) + reconstruct_path
 │   └── README.md
 ├── task_4/            # Візуалізація бінарної купи
-│   ├── main.py        # build_heap_tree + draw_tree
+│   ├── main.py        # build_heap_tree (2i+1 / 2i+2)
 │   └── README.md
 ├── task_5/            # Візуалізація обходу бінарного дерева
 │   ├── main.py        # DFS/BFS (стек і черга) + розфарбування
-│   ├── task_4.py      # Node + draw_tree (код із Завдання 4)
 │   └── README.md
 ├── task_6/            # Жадібні алгоритми та динамічне програмування
 │   ├── main.py
 │   └── README.md
 └── task_7/            # Метод Монте-Карло
-    ├── main.py        # monte_carlo_dice + порівняння з аналітикою + графік
+    ├── main.py        # monte_carlo_dice + порівняння з аналітикою
     ├── dice.png       # графік Монте-Карло vs аналітика
     └── README.md
 ```
 
-> `task_5/task_4.py` — локальна копія коду з Завдання 4, щоб імпорт
-> `from task_4 import ...` працював при запуску `python task_5/main.py`
-> (кожна тека лишається самодостатньою).
+> Пакет `viz` тримає весь код малювання (turtle / matplotlib / networkx), тож
+> `main.py` кожної задачі містить лише алгоритм і демонстрацію.
+> `viz` оголошено пакетом у `pyproject.toml`, тож після `pip install -e .` імпорт
+> `from viz... import ...` працює звідусіль — `main.py` більше не правлять `sys.path`.
+> `viz/binary_tree.py` спільний для Завдань 4 і 5 — більше немає дубля `task_4.py`.
 
 ## Задачі
 
@@ -52,17 +60,45 @@ goit-algo-fp/
 
 ## Запуск
 
-Кожну задачу можна запускати окремо, наприклад:
+Спільний код малювання лежить у пакеті `viz`, тож перед задачами з візуалізацією
+встанови проєкт у editable-режимі — це підтягне `networkx` + `matplotlib` і
+зробить `viz` імпортованим звідусіль:
+
+```bash
+pip install -e .
+```
+
+Після цього кожну задачу можна запускати окремо:
 
 ```bash
 python task_6/main.py
 ```
 
-Більшість задач використовують лише стандартну бібліотеку. Винятки:
-`task_3`, `task_4`, `task_5` і `task_7` (візуалізація) потребують `matplotlib`
-(а `task_3`–`task_5` ще й `networkx`); `task_2` використовує стандартний
-`turtle` (потрібне графічне середовище).
+`task_1` і `task_6` — чиста стандартна бібліотека (працюють і без встановлення).
+`task_3`–`task_5` та `task_7` потребують `matplotlib` (а `task_3`–`task_5` ще й
+`networkx`); `task_2` використовує стандартний `turtle` (потрібне графічне
+середовище).
+
+### Тести
 
 ```bash
-pip install networkx matplotlib
+pip install -e ".[dev]"   # додатково ставить pytest
+pytest
 ```
+
+### Відтворення картинок
+
+Усі PNG у репозиторії генеруються самим кодом — прапорцем `--save`, який рендерить
+у файл без графічного середовища (matplotlib backend `Agg`), а не показує вікно:
+
+```bash
+python task_2/main.py --save     # tree.png (matplotlib-аналог turtle-дерева)
+python task_3/main.py --save     # dijkstra.png
+python task_4/main.py --save     # min_heap.png, max_heap.png
+python task_5/main.py --save     # dfs.png, bfs.png
+python task_7/main.py --save     # dice.png
+```
+
+Без `--save` ці задачі працюють як і раніше (інтерактивне вікно). У `task_2` без
+`--save` дерево показується у turtle (`viz.render_turtle`), а `--save` рендерить
+ті самі відрізки через matplotlib (`viz.save_png`).
