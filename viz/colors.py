@@ -12,4 +12,4 @@ def lerp_color(c0, c1, t: float) -> tuple[float, ...]:
     Працює покомпонентно для кортежів будь-якої довжини й шкали (0-255 або
     0-1); повертає кортеж float. t = 0 -> c0, t = 1 -> c1.
     """
-    return tuple(a + (b - a) * t for a, b in zip(c0, c1))
+    return tuple(a + (b - a) * t for a, b in zip(c0, c1, strict=True))

@@ -18,7 +18,8 @@ def branch_color(order: int, max_order: int) -> tuple[float, float, float]:
     """Колір гілки: від коричневого (біля кореня) до зеленого (на верхівках)."""
     t = 0.0 if max_order <= 0 else 1 - order / max_order
     brown, green = (0.40, 0.26, 0.13), (0.13, 0.55, 0.13)
-    return lerp_color(brown, green, t)
+    r, g, b = lerp_color(brown, green, t)
+    return r, g, b
 
 
 def render_turtle(segments: list[Segment], max_order: int,

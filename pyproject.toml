@@ -31,7 +31,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7"]
+dev = ["pytest>=7", "ruff>=0.6", "mypy>=1.11", "hypothesis>=6"]
 
 # Пакуємо лише `viz` (спільний код малювання); теки task_N — це скрипти-демо, а
 # не імпортовані пакети. Editable-встановлення (`pip install -e .`) робить
@@ -41,3 +41,18 @@ packages = ["viz"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+# pycodestyle (E/W), Pyflakes (F), isort (I), flake8-bugbear (B)
+select = ["E", "F", "I", "W", "B"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["viz"]
+
+[tool.mypy]
+python_version = "3.10"
+# networkx не постачає типів, matplotlib типізовано лише частково
+ignore_missing_imports = true

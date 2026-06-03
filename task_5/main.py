@@ -14,7 +14,7 @@ import argparse
 from collections import deque
 from pathlib import Path
 
-from viz.binary_tree import Node, draw_tree
+from viz.binary_tree import Node, animate_traversal, draw_tree
 from viz.colors import lerp_color
 
 
@@ -98,6 +98,10 @@ if __name__ == "__main__":
         "--save", action="store_true",
         help="зберегти dfs.png і bfs.png поруч зі скриптом замість показу вікон",
     )
+    parser.add_argument(
+        "--animate", action="store_true",
+        help="зберегти покрокові GIF-анімації обходів (dfs.gif, bfs.gif)",
+    )
     args = parser.parse_args()
 
     here = Path(__file__).parent
@@ -106,15 +110,25 @@ if __name__ == "__main__":
     tree = build_sample_tree()
     order = dfs(tree)
     print("DFS (стек): ", [n.val for n in order])
-    draw_tree(tree, title="DFS — обхід у глибину (стек)",
-              save_path=str(here / "dfs.png") if args.save else None)
+    if args.animate:
+        animate_traversal(tree, order, title="DFS — обхід у глибину (стек)",
+                          save_path=str(here / "dfs.gif"))
+    else:
+        draw_tree(tree, title="DFS — обхід у глибину (стек)",
+                  save_path=str(here / "dfs.png") if args.save else None)
 
     # BFS (будуємо дерево заново, щоб кольори не змішувалися)
     tree = build_sample_tree()
     order = bfs(tree)
     print("BFS (черга):", [n.val for n in order])
-    draw_tree(tree, title="BFS — обхід у ширину (черга)",
-              save_path=str(here / "bfs.png") if args.save else None)
+    if args.animate:
+        animate_traversal(tree, order, title="BFS — обхід у ширину (черга)",
+                          save_path=str(here / "bfs.gif"))
+    else:
+        draw_tree(tree, title="BFS — обхід у ширину (черга)",
+                  save_path=str(here / "bfs.png") if args.save else None)
 
     if args.save:
         print(f"Збережено: {here / 'dfs.png'}, {here / 'bfs.png'}")
+    if args.animate:
+        print(f"GIF збережено: {here / 'dfs.gif'}, {here / 'bfs.gif'}")

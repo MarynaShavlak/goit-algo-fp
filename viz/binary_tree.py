@@ -8,8 +8,10 @@
 
 import uuid
 
-import networkx as nx
 import matplotlib.pyplot as plt
+import networkx as nx
+
+from .anim import save_gif
 
 
 class Node:
@@ -49,7 +51,7 @@ def add_edges(graph, node, pos, x=0.0, y=0.0, layer=1):
     return graph
 
 
-def draw_tree(tree_root: Node,
+def draw_tree(tree_root: Node | None,
               title: str | None = None,
               save_path: str | None = None):
     """Малює бінарне дерево, розфарбовуючи вузли за їх атрибутом `color`.
@@ -90,3 +92,34 @@ def draw_tree(tree_root: Node,
         plt.close()
     else:
         plt.show()
+
+
+def animate_traversal(tree_root: Node, order: list, title: str | None = None,
+                      save_path: str = "traversal.gif") -> None:
+    """Покрокова GIF-анімація обходу дерева.
+
+    `order` — вузли в порядку відвідування (з `task_5.dfs`/`bfs`), уже
+    розфарбовані фінальним градієнтом. На кадрі i перші i+1 вузлів показані своїм
+    кольором, решта — сірі. Сам обхід лишається в `task_5`.
+    """
+    tree = nx.DiGraph()
+    pos: dict = {tree_root.id: (0.0, 0.0)}
+    add_edges(tree, tree_root, pos)
+    node_ids = list(tree.nodes())
+    labels = {nid: data["label"] for nid, data in tree.nodes(data=True)}
+    rank = {node.id: i for i, node in enumerate(order)}
+    final_color = {node.id: node.color for node in order}
+
+    def draw_frame(ax, i: int) -> None:
+        colors = [
+            final_color[nid] if rank.get(nid, len(order)) <= i else "#DDDDDD"
+            for nid in node_ids
+        ]
+        nx.draw(tree, pos=pos, ax=ax, arrows=False, node_size=2200, node_color=colors)
+        nx.draw_networkx_labels(tree, pos, ax=ax, labels=labels,
+                                font_size=9, font_weight="bold")
+        ax.set_title(f"{title or 'Обхід'} — крок {i + 1}/{len(order)}: "
+                     f"вузол {order[i].val}", fontsize=12)
+        ax.set_axis_off()
+
+    save_gif(draw_frame, len(order), save_path, figsize=(8.0, 6.0), duration=800)

@@ -20,7 +20,7 @@ def test_path_reconstruction_is_consistent(t3):
         assert path[0] == start
         assert path[-1] == city
         # сума ваг уздовж відновленого шляху дорівнює знайденій відстані
-        total = sum(graph[u][v]["weight"] for u, v in zip(path, path[1:]))
+        total = sum(graph[u][v]["weight"] for u, v in zip(path, path[1:], strict=False))
         assert total == distances[city]
 
 

@@ -25,7 +25,7 @@ def draw_chart(mc: dict[int, float], exact: dict[int, float],
             label="Монте-Карло", color="#1296F0")
     plt.bar([i + width / 2 for i in x], [exact[s] for s in sums], width,
             label="Аналітично", color="#E8590C")
-    plt.xticks(x, sums)
+    plt.xticks(x, [str(s) for s in sums])
     plt.xlabel("Сума на двох кубиках")
     plt.ylabel("Імовірність, %")
     plt.title(f"Метод Монте-Карло vs аналітика ({n_rolls:,} кидків)".replace(",", " "))
